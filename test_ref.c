@@ -65,8 +65,23 @@ int main(int argc, char **argv)
         Top += (strlen(Top) + 1);
     }
     t2 = tvgetf();
+
     fclose(fp);
     printf("ternary_tree, loaded %d words in %.6f sec\n", idx, t2 - t1);
+
+    if (argc == 2 && strcmp(argv[1], "--bench") == 0) {
+        int stat = bench_test(root, BENCH_TEST_FILE, LMAX);
+        tst_free(root);
+        return stat;
+    }
+
+    FILE *output;
+    output = fopen("ref.txt", "a");
+    if (output != NULL) {
+        fprintf(output, "%.6f\n", t2 - t1);
+        fclose(output);
+    } else
+        printf("open file error\n");
 
     for (;;) {
         char *p;
@@ -121,7 +136,10 @@ int main(int argc, char **argv)
             break;
         case 'f':
             printf("find word in tree: ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (argc > 1 && strcmp(argv[1], "--bench") ==
+                                0)  // take out the argument after --bench
+                strcpy(word, argv[3]);
+            else if (!fgets(word, sizeof word, stdin)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }
@@ -146,6 +164,10 @@ int main(int argc, char **argv)
                     printf("  ----------\n  %s not found by tree.\n", word);
             } else
                 printf("  %s not found by bloom filter.\n", word);
+
+            if (argc > 1 && strcmp(argv[1], "--bench") == 0)  // a for auto
+                goto quit;
+
             break;
         case 's':
             printf("find words matching prefix (at least 1 char): ");
@@ -169,10 +191,14 @@ int main(int argc, char **argv)
 
             if (argc > 1 && strcmp(argv[1], "--bench") == 0)  // a for auto
                 goto quit;
+
             break;
         case 'd':
             printf("enter word to del: ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (argc > 1 && strcmp(argv[1], "--bench") ==
+                                0)  // take out the argument after --bench
+                strcpy(word, argv[3]);
+            else if (!fgets(word, sizeof word, stdin)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }
@@ -189,6 +215,10 @@ int main(int argc, char **argv)
                 printf("  deleted %s in %.6f sec\n", word, t2 - t1);
                 idx--;
             }
+
+            if (argc > 1 && strcmp(argv[1], "--bench") == 0)  // a for auto
+                goto quit;
+
             break;
         quit:
         case 'q':
