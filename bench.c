@@ -22,7 +22,7 @@ double tvgetf()
 
 int bench_test(const tst_node *root, char *out_file, const int max)
 {
-    char prefix[3] = "";
+    char prefix[4] = "";  // make it to 4 bytes to hold '\0'
     char word[WORDMAX] = "";
     char **sgl;
     FILE *fp = fopen(out_file, "w");
@@ -50,7 +50,7 @@ int bench_test(const tst_node *root, char *out_file, const int max)
         t1 = tvgetf();
         tst_search_prefix(root, prefix, sgl, &sidx, max);
         t2 = tvgetf();
-        fprintf(fp, "%d %f sec\n", idx, (t2 - t1) * 1000000);
+        fprintf(fp, "%d %f microsec\n", idx, (t2 - t1) * 1000000);
         idx++;
     }
 
