@@ -24,6 +24,7 @@ int bench_test(const tst_node *root, char *out_file, const int max)
 {
     char prefix[4] = "";  // make it to 4 bytes to hold '\0'
     char word[WORDMAX] = "";
+    char nation[WORDMAX] = "";
     char **sgl;
     FILE *fp = fopen(out_file, "w");
     FILE *dict = fopen(DICT_FILE, "r");
@@ -43,7 +44,7 @@ int bench_test(const tst_node *root, char *out_file, const int max)
     }
 
     sgl = (char **) malloc(sizeof(char *) * max);
-    while (fscanf(dict, "%s", word) != EOF) {
+    while (fscanf(dict, "%256[^,], %256[^\n]\n", word, nation) != EOF) {
         if (strlen(word) < 4)
             continue;
         strncpy(prefix, word, 3);
