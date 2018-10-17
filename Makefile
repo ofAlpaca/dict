@@ -9,7 +9,7 @@ ifeq ("$(VERBOSE)","1")
     Q :=
     VECHO = @true
 else
-    Q := @
+	Q := @
     VECHO = @printf
 endif
 
@@ -41,6 +41,10 @@ test_%: test_%.o $(OBJS_LIB)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF .$@.d $<
 
+calculate: calculate.c
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(CFLAGS) $<
+
 test:  $(TESTS)
 	echo 3 | sudo tee /proc/sys/vm/drop_caches;
 	perf stat --repeat 100 \
@@ -55,9 +59,34 @@ bench: $(TESTS)
 		./$$test --bench $(TEST_DATA); \
 	done
 
+load: $(TESTS)
+	perf stat --repeat 100 \
+                -e cache-misses,cache-references,instructions,cycles \
+                ./test_cpy --bench q
+	perf stat --repeat 100 \
+                -e cache-misses,cache-references,instructions,cycles \
+				./test_ref --bench q
+
+plot: bench_cpy.txt bench_ref.txt output.txt
+	$(Q)gnuplot scripts/runtime3.gp
+	$(Q)gnuplot scripts/runtimept.gp
+	$(Q)gnuplot scripts/runtime.gp
+	$(Q)eog plots/runtime3.png
+
+
+bench_%.txt: test_%
+	$(VECHO) "  benching...\t$@\n"
+	$(Q)./$< --bench
+
+
+output.txt: calculate load
+	$(VECHO) "  calculating...\t$@\n"
+	$(Q)./$<
+
+
 clean:
 	$(RM) $(TESTS) $(OBJS)
 	$(RM) $(deps)
-	rm -f  bench_cpy.txt bench_ref.txt ref.txt cpy.txt caculate
+	rm -f  bench_cpy.txt bench_ref.txt ref.txt cpy.txt calculate output.txt
 
 -include $(deps)

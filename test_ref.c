@@ -34,6 +34,7 @@ static void rmcrlf(char *s)
 int main(int argc, char **argv)
 {
     char word[WRDMAX] = "";
+    char nation[WRDMAX] = "";
     char *sgl[LMAX] = {NULL};
     tst_node *root = NULL, *res = NULL;
     int rtn = 0, idx = 0, sidx = 0;
@@ -51,7 +52,7 @@ int main(int argc, char **argv)
     /* memory pool */
     char *pool = (char *) malloc(poolsize * sizeof(char));
     char *Top = pool;
-    while ((rtn = fscanf(fp, "%s", Top)) != EOF) {
+    while ((rtn = fscanf(fp, "%256[^,], %256[^\n]\n", Top, nation)) != EOF) {
         char *p = Top;
         /* insert reference to each string */
         if (!tst_ins_del(&root, &p, INS, REF)) { /* fail to insert */

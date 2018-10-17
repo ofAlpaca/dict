@@ -34,6 +34,7 @@ static void rmcrlf(char *s)
 int main(int argc, char **argv)
 {
     char word[WRDMAX] = "";
+    char nation[WRDMAX] = "";
     char *sgl[LMAX] = {NULL};
     tst_node *root = NULL, *res = NULL;
     int rtn = 0, idx = 0, sidx = 0;
@@ -48,7 +49,7 @@ int main(int argc, char **argv)
 
     bloom_t bloom = bloom_create(TableSize);
 
-    while ((rtn = fscanf(fp, "%s", word)) != EOF) {
+    while ((rtn = fscanf(fp, "%256[^,], %256[^\n]\n", word, nation)) != EOF) {
         char *p = word;
         if (!tst_ins_del(&root, &p, INS, CPY)) {  // fail to insert
             fprintf(stderr, "error: memory exhausted, tst_insert.\n");
