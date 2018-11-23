@@ -6,7 +6,7 @@
 
 /** ternary search tree node. */
 typedef struct tst_node {
-    char key;               /* char key for node (null for node with string) */
+    char *key;              /* char key for node (null for node with string) */
     unsigned refcnt;        /* refcnt tracks occurrence of word (for delete) */
     struct tst_node *lokid; /* ternary low child pointer */
     struct tst_node *eqkid; /* ternary equal child pointer */
@@ -227,9 +227,10 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
     if (strlen(*s) + 1 > STKMAX / 2) /* limit length to 1/2 STKMAX */
         return NULL;                 /* 128 char word length is plenty */
 
-    pcurr = root;                     /* start at root */
-    while ((curr = *pcurr)) {         /* iterate to insertion node  */
-        diff = *p - curr->key;        /* get ASCII diff for >, <, = */
+    pcurr = root;             /* start at root */
+    while ((curr = *pcurr)) { /* iterate to insertion node  */
+        printf("Traverse %c\n", curr->key[0]);
+        diff = *p - curr->key[0];     /* get ASCII diff for >, <, = */
         if (diff == 0) {              /* if char equal to node->key */
             if (*p++ == 0) {          /* check if word is duplicate */
                 if (del) {            /* delete instead of insert   */
@@ -250,6 +251,7 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
             tst_stack_push(&stk, curr); /* push node on stack for del */
     }
 
+
     /* if not duplicate, insert remaining chars into tree rooted at curr */
     for (;;) {
         /* allocate memory for node, and fill. use calloc (or include
@@ -261,7 +263,9 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
             return NULL;
         }
         curr = *pcurr;
-        curr->key = *p;
+        curr->key = calloc(1, sizeof(char));
+        strncpy(curr->key, p, 1);
+        printf("Create %c\n", curr->key[0]);
         curr->refcnt = 1;
         curr->lokid = curr->hikid = curr->eqkid = NULL;
 
@@ -280,6 +284,7 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
                 return (void *) eqdata;
             } else { /* save pointer to 's' (allocated elsewhere) */
                 curr->eqkid = (tst_node *) *s;
+                // printf("point to %s\n", (char*)curr->eqkid);
                 return (void *) *s;
             }
         }
@@ -294,10 +299,10 @@ void *tst_search(const tst_node *p, const char *s)
 {
     const tst_node *curr = p;
 
-    while (curr) {                 /* loop over each char in 's' */
-        int diff = *s - curr->key; /* calculate the difference */
-        if (diff == 0) {           /* handle the equal case */
-            if (*s == 0)           /* if *s = curr->key = nul-char, 's' found */
+    while (curr) {                    /* loop over each char in 's' */
+        int diff = *s - curr->key[0]; /* calculate the difference */
+        if (diff == 0) {              /* handle the equal case */
+            if (*s == 0) /* if *s = curr->key = nul-char, 's' found */
                 return (void *) curr->eqkid; /* return pointer to 's' */
             s++;
             curr = curr->eqkid;
@@ -361,12 +366,12 @@ void *tst_search_prefix(const tst_node *root,
 
     /* Loop while we haven't hit a NULL node or returned */
     while (curr) {
-        int diff = *s - curr->key; /* calculate the difference */
-        if (diff == 0) {           /* handle the equal case */
+        int diff = *s - curr->key[0]; /* calculate the difference */
+        if (diff == 0) {              /* handle the equal case */
             /* check if prefix number of chars reached */
             if ((size_t)(s - start) == nchr - 1) {
                 /* call tst_suggest to fill a with pointer to matching words */
-                tst_suggest(curr, curr->key, nchr, a, n, max);
+                tst_suggest(curr, curr->key[0], nchr, a, n, max);
                 return (void *) curr;
             }
             if (*s == 0) /* no matching prefix found in tree */
@@ -386,18 +391,69 @@ void *tst_search_prefix(const tst_node *root,
  *  prototype for 'fn' is void fn(const void *, void *). data can
  *  be NULL if unused.
  */
-void tst_traverse_fn(const tst_node *p,
-                     void(fn)(const void *, void *),
-                     void *data)
+void tst_traverse_fn(const tst_node *p, char arr[], int top)
 {
     if (!p)
         return;
-    tst_traverse_fn(p->lokid, fn, data);
-    if (p->key)
-        tst_traverse_fn(p->eqkid, fn, data);
+
+    char low = (p->lokid) ? p->lokid->key[0] : '*';
+    char high = (p->hikid) ? p->hikid->key[0] : '*';
+    char eq;
+    if (p->key[0])
+        eq = (p->eqkid) ? p->eqkid->key[0] : '*';
     else
-        fn(p, data);
-    tst_traverse_fn(p->hikid, fn, data);
+        eq = *((char *) p->eqkid);
+    printf("node(%c) : (%c, %c, %c)\n", p->key[0], low, eq, high);
+
+    tst_traverse_fn(p->lokid, arr, top);
+    if (p->key[0]) {
+        int size = strlen(p->key);
+        strncpy(arr + top, p->key, size);
+        tst_traverse_fn(p->eqkid, arr, top + size);
+    } else {
+        arr[top] = '\0';
+        printf("=> %s\n", arr);
+    }
+    tst_traverse_fn(p->hikid, arr, top);
+}
+
+void tst_compress(tst_node **p)
+{
+    if (!(*p))
+        return;
+
+    char buffer[128];
+    int i = 0;
+    tst_node *root = *p;
+    tst_node *curp = *p;
+    tst_node *next = curp->eqkid;
+
+    // find the longest string and collect it
+    while ((curp->hikid == NULL) && (curp->lokid == NULL) && *(curp->key)) {
+        buffer[i++] = curp->key[0];
+        curp = curp->eqkid;
+    }
+
+    // free the node until the end of the longest string
+    while (next != curp) {
+        tst_node *freep = next;
+        next = next->eqkid;
+        free(freep->key);
+        free(freep);
+    }
+
+    root->eqkid = next;  // concat the head to the end
+
+    root->key = realloc(root->key, strlen(buffer));
+    strncpy(root->key, buffer, strlen(buffer));
+
+    tst_compress(&(curp->lokid));
+    if (curp->key[0]) {
+        tst_compress(&(curp->eqkid));
+    } else {
+        printf("=> end\n");
+    }
+    tst_compress(&(curp->hikid));
 }
 
 /** free the ternary search tree rooted at p, data storage internal. */
@@ -432,7 +488,7 @@ void tst_free(tst_node *p)
  */
 char tst_get_key(const tst_node *node)
 {
-    return node->key;
+    return node->key[0];
 }
 
 unsigned tst_get_refcnt(const tst_node *node)

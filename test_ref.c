@@ -29,12 +29,12 @@ static void rmcrlf(char *s)
         s[--len] = 0;
 }
 
-#define IN_FILE "cities.txt"
+#define IN_FILE "simple_test.txt"
 
 int main(int argc, char **argv)
 {
     char word[WRDMAX] = "";
-    char nation[WRDMAX] = "";
+    // char nation[WRDMAX] = "";
     char *sgl[LMAX] = {NULL};
     tst_node *root = NULL, *res = NULL;
     int rtn = 0, idx = 0, sidx = 0;
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     /* memory pool */
     char *pool = (char *) malloc(poolsize * sizeof(char));
     char *Top = pool;
-    while ((rtn = fscanf(fp, "%256[^,], %256[^\n]\n", Top, nation)) != EOF) {
+    while ((rtn = fscanf(fp, "%s", Top)) != EOF) {
         char *p = Top;
         /* insert reference to each string */
         if (!tst_ins_del(&root, &p, INS, REF)) { /* fail to insert */
@@ -69,6 +69,12 @@ int main(int argc, char **argv)
 
     fclose(fp);
     printf("ternary_tree, loaded %d words in %.6f sec\n", idx, t2 - t1);
+
+
+    char arr[64];
+    tst_traverse_fn(root, arr, 0);
+    // tst_compress(&root);
+    // tst_traverse_fn(root, arr, 0);
 
     if (argc == 2 && strcmp(argv[1], "--bench") == 0) {
         int stat = bench_test(root, BENCH_TEST_FILE, LMAX);
