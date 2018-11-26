@@ -396,16 +396,17 @@ void tst_traverse_seq(const tst_node *p, char arr[], int top, FILE *fp)
     if (!p)
         return;
     /*
-        char *low = (p->lokid) ? p->lokid->key : "*";
-        char *high = (p->hikid) ? p->hikid->key : "*";
-        char *eq;
-        if (p->key[0])
-            eq = (p->eqkid) ? p->eqkid->key : "*";
-        else
-            eq = "end of prefix";
+    char *low = (p->lokid) ? p->lokid->key : "*";
+    char *high = (p->hikid) ? p->hikid->key : "*";
+    char *eq;
+    if (p->key[0])
+        eq = (p->eqkid) ? p->eqkid->key : "*";
+    else
+        eq = "end of prefix";
 
-        printf("node(%s) : (%s, %s, %s)\n", p->key, low, eq, high);
+    printf("node(%s) : (%s, %s, %s)\n", p->key, low, eq, high);
     */
+
     tst_traverse_seq(p->lokid, arr, top, fp);
     if (p->key[0]) {
         int size = strlen(p->key);
@@ -460,8 +461,8 @@ void tst_compress(tst_node **p)
     // No released node, no need to concat
     if (free_cnt > 0) {
         root->eqkid = curp;  // concat the head to the end
-        root->key = realloc(root->key, i);
-        strncpy(root->key, buffer, i);
+        free(root->key);
+        root->key = strndup(buffer, i);
     }
 
     tst_compress(&(curp->lokid));

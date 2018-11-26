@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 128
 
 /* forward declaration of ternary search tree */
 typedef struct tst_node tst_node;
