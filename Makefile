@@ -1,4 +1,4 @@
-TESTS = test_cpy test_ref
+TESTS = test_cpy test_ref test_tst
 
 TEST_DATA = s Tai
 

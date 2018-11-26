@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BUFFER_SIZE 1024
+
 /* forward declaration of ternary search tree */
 typedef struct tst_node tst_node;
 
@@ -42,7 +44,7 @@ void *tst_search_prefix(const tst_node *root,
                         int *n,
                         const int max);
 
-/** tst_traverse_fn(), traverse tree calling 'fn' on each word.
+/** tst_traverse_seq(), traverse tree calling 'fn' on each word.
  *  prototype for 'fn' is void fn(const void *, void *). data can
  *  be NULL if unused.
  *
@@ -53,11 +55,9 @@ void *tst_search_prefix(const tst_node *root,
  *      printf("%s\n", tst_get_string(node));
  *  }
  *
- * Then, invoke as "tst_traverse_fn (root, print_word, NULL);"
+ * Then, invoke as "tst_traverse_seq (root, print_word, NULL);"
  */
-void tst_traverse_fn(const tst_node *p,
-                     void(fn)(const void *, void *),
-                     void *data);
+void tst_traverse_seq(const tst_node *p, char arr[], int top, FILE *fp);
 
 /** free the ternary search tree rooted at p, data storage internal. */
 void tst_free_all(tst_node *p);
@@ -72,5 +72,6 @@ void tst_free(tst_node *p);
 char tst_get_key(const tst_node *node);
 unsigned tst_get_refcnt(const tst_node *node);
 char *tst_get_string(const tst_node *node);
-
+void tst_compress(tst_node **p);
+int tst_size_count(const tst_node *p);
 #endif

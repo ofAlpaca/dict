@@ -229,7 +229,7 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
 
     pcurr = root;             /* start at root */
     while ((curr = *pcurr)) { /* iterate to insertion node  */
-        printf("Traverse %c\n", curr->key[0]);
+        // printf("Traverse %c\n", curr->key[0]);
         diff = *p - curr->key[0];     /* get ASCII diff for >, <, = */
         if (diff == 0) {              /* if char equal to node->key */
             if (*p++ == 0) {          /* check if word is duplicate */
@@ -265,7 +265,7 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
         curr = *pcurr;
         curr->key = calloc(1, sizeof(char));
         strncpy(curr->key, p, 1);
-        printf("Create %c\n", curr->key[0]);
+        // printf("Create %c\n", curr->key[0]);
         curr->refcnt = 1;
         curr->lokid = curr->hikid = curr->eqkid = NULL;
 
@@ -387,34 +387,51 @@ void *tst_search_prefix(const tst_node *root,
     return NULL;
 }
 
-/** tst_traverse_fn(), traverse tree calling 'fn' on each word.
+/** tst_traverse_seq(), traverse tree calling 'fn' on each word.
  *  prototype for 'fn' is void fn(const void *, void *). data can
  *  be NULL if unused.
  */
-void tst_traverse_fn(const tst_node *p, char arr[], int top)
+void tst_traverse_seq(const tst_node *p, char arr[], int top, FILE *fp)
 {
     if (!p)
         return;
+    /*
+        char *low = (p->lokid) ? p->lokid->key : "*";
+        char *high = (p->hikid) ? p->hikid->key : "*";
+        char *eq;
+        if (p->key[0])
+            eq = (p->eqkid) ? p->eqkid->key : "*";
+        else
+            eq = "end of prefix";
 
-    char low = (p->lokid) ? p->lokid->key[0] : '*';
-    char high = (p->hikid) ? p->hikid->key[0] : '*';
-    char eq;
-    if (p->key[0])
-        eq = (p->eqkid) ? p->eqkid->key[0] : '*';
-    else
-        eq = *((char *) p->eqkid);
-    printf("node(%c) : (%c, %c, %c)\n", p->key[0], low, eq, high);
-
-    tst_traverse_fn(p->lokid, arr, top);
+        printf("node(%s) : (%s, %s, %s)\n", p->key, low, eq, high);
+    */
+    tst_traverse_seq(p->lokid, arr, top, fp);
     if (p->key[0]) {
         int size = strlen(p->key);
         strncpy(arr + top, p->key, size);
-        tst_traverse_fn(p->eqkid, arr, top + size);
+        tst_traverse_seq(p->eqkid, arr, top + size, fp);
     } else {
-        arr[top] = '\0';
-        printf("=> %s\n", arr);
+        arr[top] = '\n';
+        fwrite(arr, top + 1, 1, fp);
     }
-    tst_traverse_fn(p->hikid, arr, top);
+    tst_traverse_seq(p->hikid, arr, top, fp);
+}
+
+int tst_size_count(const tst_node *p)
+{
+    if (!p)
+        return 0;
+
+    long size = sizeof(*p);
+    long lo = 0, eq = 0, hi = 0;
+
+    lo = tst_size_count(p->lokid);
+    if (p->key[0])
+        eq = tst_size_count(p->eqkid);
+    hi = tst_size_count(p->hikid);
+
+    return size + lo + eq + hi;
 }
 
 void tst_compress(tst_node **p)
@@ -422,37 +439,34 @@ void tst_compress(tst_node **p)
     if (!(*p))
         return;
 
-    char buffer[128];
-    int i = 0;
+    char buffer[BUFFER_SIZE];
+    memset(buffer, '\0', BUFFER_SIZE);
+    int i = 0, free_cnt = 0;
     tst_node *root = *p;
     tst_node *curp = *p;
-    tst_node *next = curp->eqkid;
 
     // find the longest string and collect it
     while ((curp->hikid == NULL) && (curp->lokid == NULL) && *(curp->key)) {
         buffer[i++] = curp->key[0];
+        tst_node *free_ptr = curp;
         curp = curp->eqkid;
+
+        if (root != free_ptr) {
+            free(free_ptr->key);
+            free(free_ptr);
+            free_cnt++;
+        }
     }
-
-    // free the node until the end of the longest string
-    while (next != curp) {
-        tst_node *freep = next;
-        next = next->eqkid;
-        free(freep->key);
-        free(freep);
+    // No released node, no need to concat
+    if (free_cnt > 0) {
+        root->eqkid = curp;  // concat the head to the end
+        root->key = realloc(root->key, i);
+        strncpy(root->key, buffer, i);
     }
-
-    root->eqkid = next;  // concat the head to the end
-
-    root->key = realloc(root->key, strlen(buffer));
-    strncpy(root->key, buffer, strlen(buffer));
 
     tst_compress(&(curp->lokid));
-    if (curp->key[0]) {
+    if (curp->key[0])
         tst_compress(&(curp->eqkid));
-    } else {
-        printf("=> end\n");
-    }
     tst_compress(&(curp->hikid));
 }
 
@@ -476,9 +490,11 @@ void tst_free(tst_node *p)
     if (!p)
         return;
     tst_free(p->lokid);
-    if (p->key)
+    if (p->key[0])
         tst_free(p->eqkid);
     tst_free(p->hikid);
+
+    free(p->key);
     free(p);
 }
 
