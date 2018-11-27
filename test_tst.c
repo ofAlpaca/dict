@@ -22,7 +22,7 @@ enum { INS, DEL, WRDMAX = 256, STKMAX = 512, LMAX = 1024 };
 
 long poolsize = 2000000 * WRDMAX;
 
-#define IN_FILE "simple_test.txt"
+#define IN_FILE "cities.txt"
 #define TRAVERSE_DATA "raw_data.txt"
 #define COMPRESSED_DATA "compress_data.txt"
 
@@ -77,5 +77,7 @@ int main(int argc, char **argv)
     memset(arr, '\0', BUFFER_SIZE);
     tst_traverse_seq(root, arr, 0, fopen(COMPRESSED_DATA, "w"));
 
-    printf("%d --> %d\n", nodes_cnt, cmpr_nodes_cnt);
+    double efficiency =
+        100 - (((double) cmpr_nodes_cnt / (double) nodes_cnt) * 100);
+    printf("Compress ratio : %f %%\n", efficiency);
 }
