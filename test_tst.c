@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     memset(arr, 0, BUFFER_SIZE);
     tst_traverse_seq(root, arr, 0, fopen(COMPRESSED_DATA, "w"));
 
-
-    double eff = 100 - (((double) cmpr_nodes_cnt / (double) nodes_cnt) * 100);
-    printf("compress ratio %.6f %%\n", eff);
+    double efficiency =
+        100 - (((double) cmpr_nodes_cnt / (double) nodes_cnt) * 100);
+    printf("Compress ratio : %f %%\n", efficiency);
 }
