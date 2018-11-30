@@ -10,7 +10,6 @@
 #include "tst.h"
 
 #define TableSize 5000000 /* size of bloom filter */
-#define HashNumber 2      /* number of hash functions */
 
 /** constants insert, delete, max word(s) & stack nodes */
 enum { INS, DEL, WRDMAX = 256, STKMAX = 512, LMAX = 1024 };
@@ -18,11 +17,9 @@ enum { INS, DEL, WRDMAX = 256, STKMAX = 512, LMAX = 1024 };
 #define REF INS
 #define CPY DEL
 
-#define BENCH_TEST_FILE "bench_ref.txt"
-
 long poolsize = 2000000 * WRDMAX;
 
-#define IN_FILE "simple_test.txt"
+#define IN_FILE "cities.txt"
 #define TRAVERSE_DATA "raw_data.txt"
 #define COMPRESSED_DATA "compress_data.txt"
 
@@ -32,6 +29,7 @@ int main(int argc, char **argv)
     int rtn = 0, idx = 0;
     int nodes_cnt = 0, cmpr_nodes_cnt = 0;
     char arr[BUFFER_SIZE];
+    memset(arr, '\0', BUFFER_SIZE);
     FILE *fp = fopen(IN_FILE, "r");
     double t1, t2;
 
@@ -64,7 +62,7 @@ int main(int argc, char **argv)
     fclose(fp);
     printf("ternary_tree, loaded %d words in %.6f sec\n", idx, t2 - t1);
     nodes_cnt = tst_size_count(root);
-    memset(arr, '\0', BUFFER_SIZE);
+    memset(arr, 0, BUFFER_SIZE);
     tst_traverse_seq(root, arr, 0, fopen(TRAVERSE_DATA, "w"));
 
     puts("\nCompressing\n");
@@ -74,8 +72,10 @@ int main(int argc, char **argv)
 
     printf("ternary_tree, compressed tree in %.6f sec\n", t2 - t1);
     cmpr_nodes_cnt = tst_size_count(root);
-    memset(arr, '\0', BUFFER_SIZE);
+    memset(arr, 0, BUFFER_SIZE);
     tst_traverse_seq(root, arr, 0, fopen(COMPRESSED_DATA, "w"));
 
-    printf("%d --> %d\n", nodes_cnt, cmpr_nodes_cnt);
+
+    double eff = 100 - (((double) cmpr_nodes_cnt / (double) nodes_cnt) * 100);
+    printf("compress ratio %.6f %%\n", eff);
 }

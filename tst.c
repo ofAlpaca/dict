@@ -424,7 +424,7 @@ int tst_size_count(const tst_node *p)
     if (!p)
         return 0;
 
-    long size = sizeof(*p);
+    long size = sizeof(*p) + sizeof(p->key);
     long lo = 0, eq = 0, hi = 0;
 
     lo = tst_size_count(p->lokid);

@@ -71,11 +71,6 @@ int main(int argc, char **argv)
     printf("ternary_tree, loaded %d words in %.6f sec\n", idx, t2 - t1);
 
 
-    char arr[64];
-    tst_traverse_fn(root, arr, 0);
-    // tst_compress(&root);
-    // tst_traverse_fn(root, arr, 0);
-
     if (argc == 2 && strcmp(argv[1], "--bench") == 0) {
         int stat = bench_test(root, BENCH_TEST_FILE, LMAX);
         tst_free(root);
@@ -143,8 +138,9 @@ int main(int argc, char **argv)
             break;
         case 'f':
             printf("find word in tree: ");
-            if (argc > 1 && strcmp(argv[1], "--bench") ==
-                                0)  // take out the argument after --bench
+            if (argc > 1 &&
+                strcmp(argv[1], "--bench") ==
+                    0)  // take out the argument after --bench
                 strcpy(word, argv[3]);
             else if (!fgets(word, sizeof word, stdin)) {
                 fprintf(stderr, "error: insufficient input.\n");
@@ -202,8 +198,9 @@ int main(int argc, char **argv)
             break;
         case 'd':
             printf("enter word to del: ");
-            if (argc > 1 && strcmp(argv[1], "--bench") ==
-                                0)  // take out the argument after --bench
+            if (argc > 1 &&
+                strcmp(argv[1], "--bench") ==
+                    0)  // take out the argument after --bench
                 strcpy(word, argv[3]);
             else if (!fgets(word, sizeof word, stdin)) {
                 fprintf(stderr, "error: insufficient input.\n");
